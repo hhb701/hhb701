@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NcTable - 空数据 + 两级表头 测试页</title>
+  <link rel="stylesheet" href="../src/nc-table.css" />
+  <style>
+    body { margin: 0; padding: 24px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f5f6f8; color: #2e333d; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #6f7982; font-size: 13px; margin-bottom: 16px; }
+    .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+    .card h2 { font-size: 14px; margin: 0; padding: 10px 14px; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+    .toolbar { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #eee; flex-wrap: wrap; align-items: center; }
+    .toolbar button { padding: 5px 12px; font-size: 12px; border: 1px solid #d0d5dd; background: #fff; border-radius: 5px; cursor: pointer; }
+    .toolbar button:hover { background: #f2f0ff; border-color: #7157d1; }
+    .toolbar button.on { background: #7157d1; border-color: #7157d1; color: #fff; }
+    .t-with-side { display: flex; align-items: stretch; }
+    .t-with-side > .table-host { flex: 1 1 auto; min-width: 0; }
+    #tableA { height: 300px; }
+    #tableB { height: 300px; }
+    .side {
+      flex: 0 0 260px; width: 260px; height: 300px; overflow-y: auto; box-sizing: border-box;
+      border-left: 1px solid #d5d5d9; background: #fafbfc; padding: 10px 12px; font-size: 12px; color: #374151;
+    }
+    .side[hidden] { display: none; }
+    .side h3 { margin: 0 0 8px; font-size: 13px; }
+    .side .sec { border-top: 1px solid #e7e7e9; margin-top: 10px; padding-top: 10px; }
+    .side .hint { color: #9aa2af; }
+    .foot { color: #6f7982; font-size: 12px; padding: 8px 14px; }
+  </style>
+</head>
+<body>
+  <h1>空数据 + 两级表头（组）显示测试</h1>
+  <div class="sub">验证：数据行为 0 且标题行为 2 行（分组表头）时，标题行是否显示完整。</div>
+
+  <div class="card">
+    <div class="toolbar">
+      <button id="btn-readonly" class="on">只读</button>
+      <button id="btn-side">侧边栏</button>
+      <span style="color:#9aa2af;font-size:12px;">只读：切换两表 readOnly；侧边栏：切换两表右侧面板（容器变宽后自动重测画布）</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>A：挂载时即 0 行数据（两级表头）</h2>
+    <div class="t-with-side">
+      <div id="tableA" class="table-host"></div>
+      <aside id="sideA" class="side" hidden>
+        <h3>侧边栏 A</h3>
+        <div class="sec">
+          <div><label style="color:#6a7184">当前列</label><div id="curColA" class="hint">未选中</div></div>
+        </div>
+        <div class="sec"><span class="hint">空数据时点击表头即可获取当前列（column-click 事件 / getActiveColumn()）。</span></div>
+      </aside>
+    </div>
+    <div class="foot">预期：组带行（组一/组二/组三）+ 叶子列标题行 完整显示，顶部不被裁切。</div>
+  </div>
+
+  <div class="card">
+    <h2>B：先有数据，再切换为 0 行</h2>
+    <div class="toolbar">
+      <button id="btnFill">加载 20 行</button>
+      <button id="btnEmpty">清空为 0 行</button>
+      <button id="btnFilter0">筛选到 0 行</button>
+      <button id="btnClearFilter">清除筛选</button>
+    </div>
+    <div class="t-with-side">
+      <div id="tableB" class="table-host"></div>
+      <aside id="sideB" class="side" hidden>
+        <h3>侧边栏 B</h3>
+        <div class="sec">
+          <div><label style="color:#6a7184">当前列</label><div id="curColB" class="hint">未选中</div></div>
+        </div>
+        <div class="sec"><span class="hint">空数据时点击表头即可获取当前列（column-click 事件 / getActiveColumn()）。</span></div>
+      </aside>
+    </div>
+    <div class="foot">预期：任意操作后两级表头均完整显示。</div>
+  </div>
+
+  <script src="../src/nc-table.js"></script>
+  <script>
+    var columns = [
+      { key: 'a', title: '组一|列A', type: 'text', width: 150 },
+      { key: 'b', title: '组一|列B', type: 'text', width: 150 },
+      { key: 'c', title: '组二|列C', type: 'number', width: 150 },
+      { key: 'd', title: '组二|列D', type: 'text', width: 150 },
+      { key: 'e', title: '普通列E', type: 'text', width: 160 },
+    ];
+
+    function makeRows(n) {
+      var rows = [];
+      for (var i = 0; i < n; i++) {
+        rows.push({ a: 'A' + i, b: 'B' + i, c: i, d: 'D' + i, e: 'E' + i });
+      }
+      return rows;
+    }
+
+    window.tableA = NcTable.mount('#tableA', { columns: columns, rows: [], readOnly: true, showAggregation: true });
+
+    window.tableB = NcTable.mount('#tableB', { columns: columns, rows: makeRows(20), readOnly: true, showAggregation: true });
+
+    // 工具条：只读切换
+    var btnReadonly = document.getElementById('btn-readonly');
+    btnReadonly.addEventListener('click', function () {
+      var ro = !tableA.readOnly;
+      tableA.readOnly = ro;
+      tableB.readOnly = ro;
+      btnReadonly.classList.toggle('on', ro);
+      tableA.scheduleRender();
+      tableB.scheduleRender();
+    });
+
+    // 工具条：侧边栏切换（容器变宽后需触发 resize 让画布重新测量）
+    function sideRefreshLayout() { window.dispatchEvent(new Event('resize')) }
+    var btnSide = document.getElementById('btn-side');
+    btnSide.addEventListener('click', function () {
+      var show = document.getElementById('sideA').hidden;
+      document.getElementById('sideA').hidden = !show;
+      document.getElementById('sideB').hidden = !show;
+      btnSide.classList.toggle('on', show);
+      sideRefreshLayout();
+    });
+
+    // 当前列展示：空数据时点击表头（column-click），有数据时随活动单元格（selection-change）
+    function bindCurCol(table, el) {
+      function fill() {
+        var c = table.getActiveColumn();
+        el.textContent = c ? c.title + '（' + c.key + '，第 ' + (table.columns.indexOf(c) + 1) + ' 列）' : '未选中';
+        el.classList.toggle('hint', !c);
+      }
+      table.on('column-click', fill);
+      table.on('selection-change', fill);
+    }
+    bindCurCol(window.tableA, document.getElementById('curColA'));
+    bindCurCol(window.tableB, document.getElementById('curColB'));
+
+    document.getElementById('btnFill').addEventListener('click', function () {
+      tableB.setData(makeRows(20));
+    });
+    document.getElementById('btnEmpty').addEventListener('click', function () {
+      tableB.setData([]);
+    });
+    document.getElementById('btnFilter0').addEventListener('click', function () {
+      tableB.setFilter('a', ['不存在的值']);
+    });
+    document.getElementById('btnClearFilter').addEventListener('click', function () {
+      tableB.clearFilters();
+    });
+  </script>
+</body>
+</html>

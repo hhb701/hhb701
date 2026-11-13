@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NcTable - Canvas 表格控件 Demo 与操作说明</title>
+  <link rel="stylesheet" href="../src/nc-table.css?v=20260917d" />
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background: #f5f6f8;
+      color: #2e333d;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #6f7982; font-size: 13px; margin-bottom: 20px; }
+    .sub a { color: #7157d1; }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card h2 {
+      font-size: 14px;
+      margin: 0;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e5e5e5;
+      background: #fafafa;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar button, .seg button {
+      padding: 5px 12px;
+      font-size: 12px;
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .toolbar button:hover, .seg button:hover { background: #f2f0ff; border-color: #7157d1; }
+    .toolbar .sep { width: 1px; height: 20px; background: #e5e5e5; }
+    .seg { display: inline-flex; gap: 0; }
+    .seg button { border-radius: 0; margin-left: -1px; }
+    .seg button:first-child { border-radius: 5px 0 0 5px; margin-left: 0; }
+    .seg button:last-child { border-radius: 0 5px 5px 0; }
+    .seg button.on { background: #7157d1; border-color: #7157d1; color: #fff; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+    #table1 { height: 460px; }
+.t-with-side { display: flex; align-items: stretch; }
+.t-with-side > .table-host { flex: 1 1 auto; min-width: 0; }
+#side {
+  flex: 0 0 300px; width: 300px; height: 460px; display: flex; flex-direction: column;
+  border-left: 1px solid #d5d5d9; background: #fafbfc; box-sizing: border-box;
+  font-size: 12px; color: #374151;
+}
+#side[hidden] { display: none; }
+#side .side-tabs { display: flex; align-items: center; background: #fff; border-bottom: 1px solid #e7e7e9; flex: 0 0 auto; }
+#side .stab {
+  flex: 1 1 auto; border: none; background: none; padding: 9px 2px 7px; font: inherit;
+  color: #6a7184; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+#side .stab:hover { color: #7157d1; }
+#side .stab.on { color: #7157d1; font-weight: 600; border-bottom-color: #7157d1; }
+#side .close { border: none; background: none; font-size: 16px; line-height: 1; color: #6a7184; cursor: pointer; padding: 0 8px 0 4px; }
+#side .side-body { flex: 1 1 auto; overflow-y: auto; padding: 10px 12px; }
+#side .spane { display: none; }
+#side .spane.on { display: block; }
+#side .sec { border-top: 1px solid #e7e7e9; margin-top: 10px; padding-top: 10px; }
+#side .sec > .sect { display: block; margin-bottom: 4px; color: #6a7184; }
+#side .fld { margin: 0 0 8px; }
+#side .fld > label { display: block; margin-bottom: 2px; color: #6a7184; }
+#side .fld input, #side .fld select, #side .fld textarea {
+  width: 100%; box-sizing: border-box; border: 1px solid #d5d5d9; border-radius: 4px;
+  padding: 4px 6px; font: inherit; background: #fff;
+}
+#side .fld textarea { height: 72px; resize: vertical; }
+#side .chk { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; cursor: pointer; }
+#side .chk input { width: auto; }
+#side button.sbtn { border: 1px solid #d5d5d9; background: #fff; border-radius: 4px; padding: 3px 10px; cursor: pointer; font: inherit; }
+#side button.sbtn:hover { border-color: #7157d1; color: #7157d1; }
+#side button.sbtn.danger:hover { border-color: #e24d4d; color: #e24d4d; }
+#side .meta { background: #f4f4f7; border: 1px solid #ececf1; border-radius: 4px; padding: 4px 8px; word-break: break-all; color: #4a5268; }
+#side .hint { color: #9aa2af; }
+#side .hidlist .it { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 0; }
+#side .rv-nav { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+#side .rv-nav button {
+  flex: 0 0 auto; width: 28px; height: 24px; padding: 0; border: 1px solid #d5d5d9; background: #fff;
+  border-radius: 4px; cursor: pointer; font-size: 11px; color: #4a5268; line-height: 1;
+}
+#side .rv-nav button:hover:not(:disabled) { border-color: #7157d1; color: #7157d1; background: #f7f5ff; }
+#side .rv-nav button:disabled { color: #c3c8d2; background: #f4f5f7; cursor: default; }
+#side .rv-nav .rv-pos { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 3px; color: #6a7184; }
+#side .rv-nav .rv-pos input {
+  width: 48px; text-align: center; border: 1px solid #d5d5d9; border-radius: 4px; padding: 2px 2px; font: inherit; background: #fff;
+}
+#side .rv-nav .rv-pos input:focus { outline: none; border-color: #7157d1; }
+    /* 行数据树弹层编辑器（挂在 body 下，fixed 定位） */
+    .rt-pop {
+      position: fixed; z-index: 120; background: #fff; border: 1px solid #d0d5dd; border-radius: 6px;
+      box-shadow: 0 10px 28px rgba(20, 22, 40, 0.18); padding: 8px 10px;
+      font: 12px Inter, ui-sans-serif, system-ui, sans-serif; color: #374151;
+    }
+    .rt-pop .t { color: #6a7184; margin-bottom: 4px; }
+    .rt-pop input, .rt-pop select {
+      width: 100%; min-width: 150px; box-sizing: border-box; border: 1px solid #d5d5d9; border-radius: 4px;
+      padding: 4px 6px; font: inherit; background: #fff;
+    }
+    .rt-pop .chk { display: flex; align-items: center; gap: 6px; }
+    #table2 { height: 320px; }
+    /* 自定义弹框（dlg 单元格类型示例） */
+    .dlg-mask {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(15, 17, 26, 0.45);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dlg-box {
+      width: 420px; background: #fff; border-radius: 10px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+      padding: 16px 18px; font-size: 13px; color: #2e333d;
+    }
+    .dlg-title { font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+    .dlg-box textarea {
+      width: 100%; height: 96px; box-sizing: border-box;
+      border: 1px solid #d0d5dd; border-radius: 6px; padding: 8px 10px;
+      font: 400 13px Inter, ui-sans-serif, system-ui, sans-serif;
+      color: #2e333d; resize: vertical; outline: none;
+    }
+    .dlg-box textarea:focus { border-color: #7157d1; box-shadow: 0 0 0 3px rgba(113, 87, 209, 0.15); }
+    .dlg-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    .dlg-btns button { padding: 6px 16px; font-size: 12px; border: 1px solid #d0d5dd; background: #fff; border-radius: 5px; cursor: pointer; }
+    .dlg-btns button.primary { background: #7157d1; border-color: #7157d1; color: #fff; }
+    .dlg-btns button:hover { border-color: #7157d1; }
+    /* 操作说明面板 */
+    .ops h3 { font-size: 13px; margin: 14px 14px 6px; color: #374151; }
+    .ops h3:first-child { margin-top: 10px; }
+    .ops table { width: calc(100% - 28px); margin: 0 14px 8px; border-collapse: collapse; font-size: 12px; }
+    .ops td { padding: 4px 6px; border-bottom: 1px dashed #eee; vertical-align: top; }
+    .ops td:first-child { white-space: nowrap; color: #4a5268; }
+    kbd {
+      display: inline-block; min-width: 18px; text-align: center;
+      padding: 1px 5px; font: 600 11px Consolas, monospace;
+      background: #f4f4f7; border: 1px solid #d5d7de; border-bottom-width: 2px; border-radius: 4px;
+      color: #374151;
+    }
+    #log {
+      height: 300px;
+      overflow-y: auto;
+      background: #1e1e2e;
+      color: #a6e3a1;
+      font: 12px/1.7 Consolas, monospace;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+    #log .ev { color: #89b4fa; }
+    #log .ts { color: #6c7086; }
+    .foot { color: #6f7982; font-size: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>NcTable 独立表格控件 Demo</h1>
+  <div class="sub">
+    从 nocodb 的 <code>nc-gui/components/smartsheet/grid/canvas</code>（canvas 虚拟渲染表格）抽离：
+    冻结列、列宽拖拽、区域选择、键盘导航、剪贴板、填充手柄、分块异步加载、自定义单元格类型。
+    完整文档见 <a href="../操作指南.md">操作指南.md</a>，树形表格见 <a href="tree.html">树形 Demo</a>。
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>示例 1：本地数据（1,000 行 · 全部内置类型 · 冻结列 · progress/开关/弹框录入 · 操作列 · 导出 Excel）</h2>
+        <div class="toolbar">
+          <button id="btn-add">追加 10 行</button>
+          <button id="btn-del">删除勾选项</button>
+          <button id="btn-clearf">清除全部筛选</button>
+          <span class="sep"></span>
+          <button id="btn-copy">复制选区 (Ctrl+C)</button>
+          <button id="btn-paste">粘贴示例数据 (Ctrl+V)</button>
+          <button id="btn-export">导出 Excel</button>
+          <span class="sep"></span>
+          行高
+          <span class="seg" id="seg-rowh">
+            <button data-h="32" class="on">短</button><button data-h="60">中</button><button data-h="90">高</button>
+          </span>
+          <span class="sep"></span>
+          勾选
+          <span class="seg" id="seg-rowsel">
+            <button data-m="multiple">多选</button><button data-m="single" class="on">单选</button>
+          </span>
+          <span class="sep"></span>
+          <button id="btn-search">查询定位 (Ctrl+F)</button>
+          <button id="btn-focus">聚焦表格</button>
+          <span class="sep"></span>
+          <button id="btn-side">侧边栏</button>
+        </div>
+        <div class="t-with-side">
+          <div id="table1" class="table-host"></div>
+          <aside id="side" hidden>
+            <div class="side-tabs" id="side-tabs">
+              <button class="stab on" data-tab="col">列属性</button>
+              <button class="stab" data-tab="row">行数据</button>
+              <button class="stab" data-tab="cell">单元格</button>
+              <button class="stab" data-tab="ext">自定义</button>
+              <button class="close" id="btn-side-close" title="关闭">×</button>
+            </div>
+            <div class="side-body">
+              <section class="spane on" data-pane="col">
+                <div id="cp-empty" class="hint" hidden>点击表格中的单元格后，可在此编辑当前列的属性。</div>
+                <div id="cp-form">
+                  <div class="fld"><label>列标题</label><input id="cp-title" /></div>
+                  <div class="fld"><label>字段 key / 分组</label><div class="meta" id="cp-key">-</div></div>
+                  <div class="fld"><label>数据类型</label><select id="cp-type"></select></div>
+                  <div class="fld" id="cp-options-wrap"><label>选项（每行一个，支持 <code>标签=值</code>）</label><textarea id="cp-options"></textarea></div>
+                  <div class="fld"><label>占位提示</label><input id="cp-placeholder" /></div>
+                  <div class="fld"><label>列宽 (px)</label><input id="cp-width" type="number" min="50" step="1" /></div>
+                  <div class="fld"><label>数据对齐</label>
+                    <select id="cp-align">
+                      <option value="">默认（按类型）</option>
+                      <option value="left">左对齐</option>
+                      <option value="center">居中</option>
+                      <option value="right">右对齐</option>
+                    </select>
+                  </div>
+                  <label class="chk"><input type="checkbox" id="cp-fixed" /> 固定到左侧</label>
+                  <label class="chk"><input type="checkbox" id="cp-sortable" /> 允许排序</label>
+                  <div style="display:flex;gap:8px;">
+                    <button class="sbtn" id="btn-cp-hide">隐藏本列</button>
+                    <button class="sbtn danger" id="btn-cp-del">删除本列</button>
+                  </div>
+                </div>
+                <div class="sec" id="cp-hidden-sec">
+                  <span class="sect">已隐藏字段（<span id="cp-hidden-n">0</span>）</span>
+                  <div class="hidlist" id="cp-hidden"></div>
+                  <div style="margin-top:6px;"><button class="sbtn" id="btn-cp-showall">全部恢复</button></div>
+                </div>
+              </section>
+
+              <section class="spane" data-pane="row">
+                <div class="rv-nav">
+                  <button id="btn-rv-first" title="首行">⏮</button>
+                  <button id="btn-rv-prev" title="上一行">◀</button>
+                  <span class="rv-pos"><input id="rv-cur" type="number" min="1" step="1" /> / <span id="rv-total">0</span></span>
+                  <button id="btn-rv-next" title="下一行">▶</button>
+                  <button id="btn-rv-last" title="末行">⏭</button>
+                </div>
+                <div id="rv-grid" style="height:320px;"></div>
+              </section>
+
+              <section class="spane" data-pane="cell">
+                <div class="fld"><label>当前单元格</label><div id="side-cell" class="hint">未选中</div></div>
+                <div class="fld"><label>原始值</label><div class="meta" id="cc-raw">-</div></div>
+                <div class="fld"><label>显示文本</label><div class="meta" id="cc-text">-</div></div>
+                <div class="fld"><label>编辑值</label><div id="cc-edit"></div></div>
+                <div style="display:flex;gap:8px;">
+                  <button class="sbtn" id="btn-cc-copy">复制显示值</button>
+                  <button class="sbtn danger" id="btn-cc-clear">清空单元格</button>
+                </div>
+              </section>
+
+              <section class="spane" data-pane="ext">
+                <div class="fld"><label>快捷备注（写入“备注”列）</label>
+                  <textarea id="side-note" placeholder="输入备注后点保存"></textarea>
+                  <div style="margin-top:6px;"><button id="btn-note-save" class="sbtn">保存备注</button></div>
+                </div>
+                <div class="sec">
+                  <span class="sect">扩展插槽</span>
+                  <div class="hint">可在此挂接自定义面板：审批流、附件、AI 生成、批量工具等（示例占位）。</div>
+                  <div id="side-ext"></div>
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+        <div class="foot" style="padding:0 14px 10px;">
+          提示：单击选中，拖拽/Shift+单击扩选，选区右下角紫色圆点可向下拖拽填充；Delete 清空选区；双击/F2/Enter/直接键入进入编辑。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>示例 2：远程分块加载（loadData，50,000 行虚拟滚动，滚动到未加载块显示 loading 占位）</h2>
+        <div id="table2"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card ops">
+        <h2>操作方法速查</h2>
+        <h3>鼠标</h3>
+        <table>
+          <tr><td>单击单元格</td><td>设为活动单元格；checkbox 列直接切换</td></tr>
+          <tr><td>拖拽 / Shift+单击</td><td>区域选择（上限 100 行）</td></tr>
+          <tr><td>双击 / Enter / F2</td><td>进入编辑（select 弹出下拉）</td></tr>
+          <tr><td>右下角紫点下拖</td><td>填充手柄：重复选区值模式</td></tr>
+          <tr><td>表头列边界 8px 热区</td><td>拖拽调整列宽（最小 50px）</td></tr>
+          <tr><td>拖拽列头（非冻结列）</td><td>移动超 5px 进入换位拖拽，紫线指示落点，松手交换列位置；未移动松开=点击排序</td></tr>
+          <tr><td>单击表头</td><td>排序：升 → 降 → 取消</td></tr>
+          <tr><td>表头右侧 ∨ 按钮</td><td>列设置菜单：筛选/重命名/排序/冻结/隐藏/删除/前后插入字段</td></tr>
+          <tr><td>数据筛选</td><td>Excel 式勾选列值过滤（可搜索、多列组合），筛选列显示漏斗标记</td></tr>
+          <tr><td>右键列头</td><td>同样打开列设置菜单</td></tr>
+          <tr><td>单击末尾 + 列</td><td>添加新字段</td></tr>
+          <tr><td>滚轮 / Shift+滚轮</td><td>滚动；Shift+滚轮横向滚动</td></tr>
+          <tr><td>右侧/底部滚动条</td><td>拖拽 thumb、点击轨道翻页；垂直条上下：横杠+▲首页 ▲上一页 ▼下一页 ▼+横杠末页</td></tr>
+          <tr><td>行号区勾选框</td><td>勾选行；工具栏“勾选”段可切换 多选（表头全选/清空）/ 单选（勾新消旧）</td></tr>
+          <tr><td>末行“添加一行”</td><td>单击追加空白记录</td></tr>
+          <tr><td>操作列 编辑/删除</td><td>按钮直接触发行操作（Enter 激活主操作）</td></tr>
+          <tr><td>开关列</td><td>自定义 switch 类型：单击 / Enter 切换布尔值</td></tr>
+          <tr><td>备注列</td><td>自定义 dlg 类型：单击弹自定义对话框录入，确定写回</td></tr>
+          <tr><td>登记时间列</td><td>内置 datetime 类型：双击/F2 弹原生日期时间选择器</td></tr>
+          <tr><td>导出 Excel</td><td>工具栏按钮：导出当前视图为 .xlsx（尊重排序/筛选/隐藏列）</td></tr>
+        </table>
+        <h3>键盘</h3>
+        <table>
+          <tr><td><kbd>↑↓←→</kbd></td><td>移动活动单元格</td></tr>
+          <tr><td><kbd>Shift</kbd>+<kbd>方向</kbd></td><td>扩展选区</td></tr>
+          <tr><td><kbd>Tab</kbd> / <kbd>Enter</kbd></td><td>编辑提交并右移 / 下移</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>取消编辑 / 收敛选区</td></tr>
+          <tr><td><kbd>Delete</kbd></td><td>清空选区内容</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>切换 checkbox 单元格</td></tr>
+          <tr><td>任意字符</td><td>直接键入即开始编辑</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C/X/V</kbd></td><td>复制 / 剪切 / 粘贴（TSV）</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>全选</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td>查询定位：表头浮层输入关键字，Enter 下一个 / Shift+Enter 上一个，循环环绕并滚动定位</td></tr>
+          <tr><td><kbd>PgUp/PgDn</kbd></td><td>翻一屏</td></tr>
+          <tr><td><kbd>Home/End</kbd></td><td>行首/行尾；<kbd>Ctrl</kbd>+ 到首/末行</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h2>事件日志（onCellChange / sort / copy / paste ...）</h2>
+        <div id="log" style="border-radius:0;border:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/nc-table.js?v=20260917d"></script>
+  <script src="main.js?v=20260917d"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NcTable - 树形表格 Demo（组织架构）</title>
+  <link rel="stylesheet" href="../src/nc-table.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background: #f5f6f8;
+      color: #2e333d;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #6f7982; font-size: 13px; margin-bottom: 20px; }
+    .sub a { color: #7157d1; }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .card h2 {
+      font-size: 14px;
+      margin: 0;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e5e5e5;
+      background: #fafafa;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .toolbar button {
+      padding: 5px 12px;
+      font-size: 12px;
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .toolbar button:hover { background: #f2f0ff; border-color: #7157d1; }
+    .toolbar button.on { background: #7157d1; border-color: #7157d1; color: #fff; }
+    .toolbar .sep { width: 1px; height: 20px; background: #e5e5e5; }
+    .toolbar input {
+      padding: 5px 10px;
+      font-size: 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 5px;
+      width: 160px;
+      outline: none;
+    }
+    .toolbar input:focus { border-color: #7157d1; box-shadow: 0 0 0 3px rgba(113, 87, 209, 0.15); }
+    /* 显示格式设置面板 */
+    .fmt-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 28px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #eee;
+      background: #fbfaff;
+      font-size: 12px;
+    }
+    .fmt-panel[hidden] { display: none; }
+    .fmt-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .fmt-item label { color: #374151; font-weight: 600; white-space: nowrap; }
+    .fmt-item .kind {
+      color: #7157d1; font-size: 11px; border: 1px solid #ddd4f8;
+      border-radius: 4px; padding: 0 6px; background: #fff; white-space: nowrap;
+    }
+    .fmt-item select {
+      flex: 1; min-width: 0;
+      padding: 4px 8px; font-size: 12px;
+      border: 1px solid #d0d5dd; border-radius: 5px; outline: none; background: #fff; color: #2e333d;
+    }
+    .fmt-item select:focus { border-color: #7157d1; }
+    .fmt-actions button {
+      padding: 4px 12px; font-size: 12px;
+      border: 1px solid #d0d5dd; background: #fff; border-radius: 5px; cursor: pointer;
+    }
+    .fmt-actions button:hover { border-color: #7157d1; background: #f2f0ff; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+    #tree { height: 620px; }
+    .foot { color: #6f7982; font-size: 12px; padding: 0 14px 10px; }
+    .foot b { color: #7157d1; }
+    .ops h3 { font-size: 13px; margin: 14px 14px 6px; color: #374151; }
+    .ops h3:first-child { margin-top: 10px; }
+    .ops table { width: calc(100% - 28px); margin: 0 14px 8px; border-collapse: collapse; font-size: 12px; }
+    .ops td { padding: 4px 6px; border-bottom: 1px dashed #eee; vertical-align: top; }
+    .ops td:first-child { white-space: nowrap; color: #4a5268; }
+    kbd {
+      display: inline-block; min-width: 18px; text-align: center;
+      padding: 1px 5px; font: 600 11px Consolas, monospace;
+      background: #f4f4f7; border: 1px solid #d5d7de; border-bottom-width: 2px; border-radius: 4px;
+      color: #374151;
+    }
+    #log {
+      height: 220px;
+      overflow-y: auto;
+      background: #1e1e2e;
+      color: #a6e3a1;
+      font: 12px/1.7 Consolas, monospace;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+    #log .ev { color: #89b4fa; }
+    #log .ts { color: #6c7086; }
+  </style>
+</head>
+<body>
+  <h1>NcTable 树形表格 Demo（组织架构）</h1>
+  <div class="sub">
+    不修改控件源码，仅用 <code>NcTable.registerCellType()</code> 自定义单元格 + <code>setData()</code>
+    实现树形展开/收起、缩进参考线、父子勾选级联、节点增删、检索定位与<b>显示格式设置</b>（日期/时间/金额/数字，
+    基于 <code>updateColumn(key, { formatter })</code>）；约 1,600 节点虚拟滚动。
+    基础交互见 <a href="index.html">主 Demo</a> 与 <a href="../操作指南.md">操作指南.md</a>。
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>组织架构树（4 级：公司 → 部门 → 小组 → 成员）</h2>
+        <div class="toolbar">
+          <button id="btn-expand">全部展开</button>
+          <button id="btn-collapse">全部收起</button>
+          <span class="sep"></span>
+          <button id="btn-add-root">添加公司</button>
+          <button id="btn-add-child">添加子节点（活动行）</button>
+          <button id="btn-del">删除节点及子树（活动行）</button>
+          <span class="sep"></span>
+          <input id="inp-search" placeholder="搜索节点名称，回车定位" />
+          <button id="btn-search">定位</button>
+          <span class="sep"></span>
+          <button id="btn-export">导出 Excel</button>
+          <button id="btn-fmt">显示格式 ▾</button>
+        </div>
+        <div class="fmt-panel" id="fmt-panel" hidden></div>
+        <div id="tree"></div>
+        <div class="foot" style="padding-top:8px;">
+          节点总数 <b id="st-nodes">-</b> · 可见行 <b id="st-rows">-</b> · 已展开 <b id="st-expanded">-</b> ·
+          勾选行删除后自动重挂树；单击尖括号展开 / 收起；双击名称列可重命名。
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card ops">
+        <h2>树形操作速查</h2>
+        <h3>树特有交互</h3>
+        <table>
+          <tr><td>单击 › / ⌄</td><td>展开 / 收起该节点子树（保持该行位置）</td></tr>
+          <tr><td>“全部展开 / 收起”</td><td>批量切换所有分支，配合虚拟滚动浏览 1,600+ 行</td></tr>
+          <tr><td>勾选“完成”列</td><td>自动级联该节点的全部子孙</td></tr>
+          <tr><td>添加子节点</td><td>在“活动单元格”所在行下挂新节点并自动展开、定位</td></tr>
+          <tr><td>删除节点</td><td>连子树一起删除（二次确认，提示子孙数量）</td></tr>
+          <tr><td>搜索定位</td><td>按名称模糊匹配第一个节点，自动展开祖先路径并滚动选中</td></tr>
+          <tr><td>折叠时徽标</td><td>收起的分支在名称后显示 “· N 项” 子节点数</td></tr>
+          <tr><td>末行“添加一行”</td><td>追加一个根节点（公司）</td></tr>
+        </table>
+        <h3>显示格式设置（工具栏“显示格式”面板）</h3>
+        <table>
+          <tr><td>截止日期</td><td>YYYY-MM-DD / YYYY/MM/DD / YYYY年MM月DD日 / MM-DD 等 7 种日期样式</td></tr>
+          <tr><td>打卡时间</td><td>含秒 / 仅时间 HH:mm:ss / 中文日期+分钟 等 6 种日期时间样式</td></tr>
+          <tr><td>预算金额</td><td>¥ 千分位两位小数 / 整数元 / “元”后缀 / 美元 / 万元 等 6 种金额样式</td></tr>
+          <tr><td>工时</td><td>小数位数 / 带单位 h / 占标准周（40h）百分比</td></tr>
+          <tr><td>生效范围</td><td>画布渲染、Ctrl+C 复制、筛选面板选项、Excel 导出（.xlsx 数字列保留原值）；编辑器中始终为原值</td></tr>
+        </table>
+        <h3>通用交互（同主 Demo）</h3>
+        <table>
+          <tr><td>双击 / F2 / 直接键入</td><td>重命名（编辑器左对齐，缩进以渲染为准）</td></tr>
+          <tr><td><kbd>↑↓←→</kbd> / <kbd>Tab</kbd> / <kbd>Enter</kbd></td><td>单元格导航（按展开后的平铺行序）</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>V</kbd></td><td>复制 / 粘贴（平铺视图）</td></tr>
+          <tr><td>表头拖拽边界</td><td>调列宽；名称/层级列固定不参与排序</td></tr>
+          <tr><td>数据筛选</td><td>与展开状态共存：按勾选值过滤平铺行，展开/收起/增删时筛选保持</td></tr>
+          <tr><td>排序</td><td>会破坏父子层级：操作后自动重建树视图并提示</td></tr>
+        </table>
+        <h3>实现说明</h3>
+        <table>
+          <tr><td>树 → 平铺</td><td>深度优先展开可见节点为 rows，<code>setData()</code> 重建视图</td></tr>
+          <tr><td>tree 单元格</td><td>自定义类型：按 <code>row.__level</code> 绘制缩进线、尖括号（›/⌄）、图标、折叠徽标</td></tr>
+          <tr><td>onClick 热区</td><td>仅尖括号图标 ±1px 内命中折叠，其余区域正常选择/拖选</td></tr>
+          <tr><td>行对象 = 节点</td><td>编辑/勾选直接写回树节点，无需同步</td></tr>
+          <tr><td>显示格式</td><td><code>updateColumn(key,{formatter})</code> 注入，核心渲染/复制/筛选/导出统一调用</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h2>事件日志</h2>
+        <div id="log" style="border-radius:0;border:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/nc-table.js"></script>
+  <script src="tree.js"></script>
+</body>
+</html>
